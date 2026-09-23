@@ -1031,8 +1031,8 @@ Layer B makes sense when you specifically want the premium model's **thinking an
 | DOCX | docProps / customXml | Scrub props, drop customXml |
 | EPUB | OPF metadata, XHTML meta/JSON-LD, embedded media | Scrub OPF, strip XHTML meta, clean media + Layer A (skips encrypted parts) |
 | ODT | meta.xml | Drop generator / AI-ish meta |
-| HTML | meta, JSON-LD, data-ai* | Strip tags/attrs |
-| Markdown | YAML frontmatter AI keys | Drop keys + Layer A body |
+| HTML | meta, JSON-LD, data-ai*, `<!-- -->` comments naming an AI tool or marked AI-generated / C2PA / content credential | Strip tags/attrs/comments |
+| Markdown | YAML frontmatter AI keys, `<!-- -->` comments naming an AI tool or marked AI-generated / C2PA / content credential (outside code fences) | Drop keys and comments + Layer A body |
 | MP4 / MOV / M4A / M4V | ISOBMFF `jumb`/`uuid` boxes (same mechanism as AVIF/HEIC) + `moov/udta` generator tags | Drop boxes |
 | WAV | RIFF `C2PA` / `LIST INFO` chunks, embedded `id3\x20` chunk | Drop chunks |
 | MP3 | ID3v2 frames (v2.3/v2.4 per-frame; v2.2 whole-tag) | Drop matched frames or whole tag |
@@ -1174,6 +1174,14 @@ Third-party projects that wrap or complement this repository, listed for discove
 ### DropMarks — macOS GUI
 
 [DropMarks](https://github.com/Nicktili72/dropmarks) is an independent MIT-licensed macOS SwiftUI application. It calls this repository's `inspect_file.py` / `clean_file.py` (and optionally `rewrite_text.py`) via a vendored snapshot of those stdlib scripts. It is a separate codebase and is not affiliated with this project; see its README for scope and limits.
+
+### unmark-checker — measurement harness
+
+[unmark-checker](https://github.com/Yurakonoplya/unmark-checker) is an independent MIT-licensed Python tool that plants a statistical text watermark of the published SynthID-Text class with a key of your own and scores what a removal left behind. It ships a runner (`integrations/watermarks-remover/run.py`) that hands a marked sample to this repository, either through its `/clean` HTTP service or by calling `clean_text.py` and `rewrite_text.py` in a checkout, and reports the detector score next to how much of the meaning, the facts and the length survived. Which layers ran is part of the result: the `/clean` service runs both layers, while a checkout run always does layer A and only does layer B when `WATERMARKS_REWRITE_BACKEND` is set and `--layer-a-only` is absent. The runner labels every run with the layers it measured, so a layer-A-only score is never read as a full-pipeline one. It only measures; it never removes anything. It is a separate codebase and is not affiliated with this project; see its README for scope and limits.
+
+### Simple Unmark: privacy-preserving SaaS
+
+[Simple Unmark](https://simpleunmark.com) makes `watermarks-remover` available through a simple web app, currently for text only, with no installation or server setup. The service preserves privacy by default without retaining submitted content. Confidential mode runs the remover in a trusted execution environment (TEE), adding cryptographic verification and hardware-backed protection against infrastructure operators accessing content during processing. An independent project with an [open-source core](https://github.com/SimpleUnmark/confidential). See the [privacy architecture](https://github.com/SimpleUnmark/confidential/blob/main/docs/architecture.md) for guarantees and scope.
 
 ### Adding a project
 
